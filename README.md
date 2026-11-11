@@ -14,6 +14,11 @@ Cada contato cadastrado possui um nome, número de telefone e uma função/espec
 Os contatos cadastrados no aplicativo são armazenados localmente utilizando um banco de dados **SQLite**, garantindo que as informações de contatos permaneçam salvas entre as sessões do aplicativo.
 
 ---
+<img width="266" height="598" alt="image" src="https://github.com/user-attachments/assets/3dabc1b6-e08a-49ff-9575-fd59b10e43f1" />
+<img width="266" height="597" alt="image" src="https://github.com/user-attachments/assets/e5e301f0-45e8-4357-80a2-392e20d57bb3" />
+<img width="266" height="593" alt="image" src="https://github.com/user-attachments/assets/67a8449d-7bd1-4cb9-8b04-d778604ab5d4" />
+<img width="266" height="598" alt="image" src="https://github.com/user-attachments/assets/feb8ee41-3bb8-4222-8e30-042073153cb4" />
+
 
 ## 🛠️ Tecnologias Utilizadas
 * **Linguagem de Programação:** Kotlin
