@@ -20,10 +20,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,6 +76,7 @@ fun ChatScreen(
 
     val messageList = messagesMap[contactId] ?: emptyList()
     var inputText by remember { mutableStateOf("") }
+    var showMenu by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
     // Auto-scroll to bottom when new messages arrive
@@ -137,8 +141,30 @@ fun ChatScreen(
                     IconButton(onClick = {}) {
                         Icon(Icons.Default.Phone, contentDescription = "Voice Call", tint = Color.White)
                     }
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Delete Contact", color = Color(0xFFD32F2F)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete Contact",
+                                        tint = Color(0xFFD32F2F)
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    viewModel.deleteContact(contactId)
+                                    onBackClick()
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
