@@ -1,11 +1,14 @@
 package com.example.agent_phone.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.agent_phone.db.ContactsDatabaseHelper
 import com.example.agent_phone.model.ChatMessage
 import com.example.agent_phone.model.Contact
 import com.example.agent_phone.network.OllamaChatMessage
 import com.example.agent_phone.network.OllamaService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,37 +16,47 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-class AppViewModel : ViewModel() {
+class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     val ollamaService = OllamaService()
+    private val dbHelper = ContactsDatabaseHelper(application)
 
-    private val _contacts = MutableStateFlow<List<Contact>>(
-        listOf(
-            Contact(
-                id = "dave_lawyer",
-                name = "Dave",
-                role = "Lawyer",
-                phoneNumber = "9392532052"
-            )
-        )
-    )
+    private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
     val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
 
-    private val _messages = MutableStateFlow<Map<String, List<ChatMessage>>>(
-        mapOf(
-            "dave_lawyer" to listOf(
-                ChatMessage(
-                    contactId = "dave_lawyer",
-                    isFromUser = false,
-                    text = "Hello! I am Dave, an experienced lawyer. How can I assist you with legal matters today?"
-                )
-            )
-        )
-    )
+    private val _messages = MutableStateFlow<Map<String, List<ChatMessage>>>(emptyMap())
     val messages: StateFlow<Map<String, List<ChatMessage>>> = _messages.asStateFlow()
 
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
+
+    init {
+        loadContactsFromDatabase()
+    }
+
+    private fun loadContactsFromDatabase() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val loadedContacts = dbHelper.getAllContacts()
+            _contacts.value = loadedContacts
+
+            // Initialize default welcome message in memory for each loaded contact
+            _messages.update { currentMap ->
+                val updatedMap = currentMap.toMutableMap()
+                for (contact in loadedContacts) {
+                    if (!updatedMap.containsKey(contact.id)) {
+                        updatedMap[contact.id] = listOf(
+                            ChatMessage(
+                                contactId = contact.id,
+                                isFromUser = false,
+                                text = "Hello! I am ${contact.name}, a specialist in ${contact.role}. How can I help you today?"
+                            )
+                        )
+                    }
+                }
+                updatedMap
+            }
+        }
+    }
 
     fun updateOllamaConfig(baseUrl: String, model: String) {
         if (baseUrl.isNotBlank()) ollamaService.baseUrl = baseUrl.trim()
@@ -56,16 +69,35 @@ class AppViewModel : ViewModel() {
             role = role.trim(),
             phoneNumber = phoneNumber.trim()
         )
-        _contacts.update { currentList -> currentList + newContact }
-        _messages.update { currentMap ->
-            currentMap + (newContact.id to listOf(
-                ChatMessage(
-                    contactId = newContact.id,
-                    isFromUser = false,
-                    text = "Hello! I am ${newContact.name}, a specialist in ${newContact.role}. How can I help you today?"
-                )
-            ))
+
+        viewModelScope.launch(Dispatchers.IO) {
+            dbHelper.insertContact(newContact)
+            val updatedList = dbHelper.getAllContacts()
+            _contacts.value = updatedList
         }
+
+        _messages.update { currentMap ->
+            if (!currentMap.containsKey(newContact.id)) {
+                currentMap + (newContact.id to listOf(
+                    ChatMessage(
+                        contactId = newContact.id,
+                        isFromUser = false,
+                        text = "Hello! I am ${newContact.name}, a specialist in ${newContact.role}. How can I help you today?"
+                    )
+                ))
+            } else {
+                currentMap
+            }
+        }
+    }
+
+    fun deleteContact(contactId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbHelper.deleteContact(contactId)
+            val updatedList = dbHelper.getAllContacts()
+            _contacts.value = updatedList
+        }
+        _messages.update { currentMap -> currentMap - contactId }
     }
 
     fun sendMessage(contactId: String, text: String) {
