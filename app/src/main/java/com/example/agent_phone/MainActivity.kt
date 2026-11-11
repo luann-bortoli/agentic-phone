@@ -18,6 +18,7 @@ import androidx.navigation.navArgument
 import com.example.agent_phone.ui.AppViewModel
 import com.example.agent_phone.ui.ChatScreen
 import com.example.agent_phone.ui.ContactListScreen
+import com.example.agent_phone.ui.LoginScreen
 import com.example.agent_phone.ui.theme.AgentphoneTheme
 
 class MainActivity : ComponentActivity() {
@@ -43,8 +44,18 @@ fun AgentPhoneApp(viewModel: AppViewModel = viewModel()) {
 
     NavHost(
         navController = navController,
-        startDestination = "contacts"
+        startDestination = "login"
     ) {
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("contacts") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable("contacts") {
             ContactListScreen(
                 viewModel = viewModel,
