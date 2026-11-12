@@ -313,10 +313,15 @@ fun ChatInputBar(
                 modifier = Modifier.weight(1f),
                 shape = CircleShape,
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color(0xFF111111),
+                    unfocusedTextColor = Color(0xFF111111),
+                    focusedPlaceholderColor = Color(0xFF888888),
+                    unfocusedPlaceholderColor = Color(0xFF888888),
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
+                    unfocusedBorderColor = Color.Transparent,
+                    cursorColor = Color(0xFF075E54)
                 ),
                 maxLines = 4
             )
